@@ -13,7 +13,7 @@ Function Invoke-AddPolicy {
     $APIName = $TriggerMetadata.FunctionName
     Write-LogMessage -user $Request.headers.'x-ms-client-principal' -API $APINAME -message 'Accessed this API' -Sev 'Debug'
 
-    $Tenants = ($Request.Body | Select-Object Select_*).psobject.properties.value
+    $Tenants = ($Request.Body.tenantFilter.value)
     if ('AllTenants' -in $Tenants) { $Tenants = (Get-Tenants).defaultDomainName }
     $displayname = $Request.Body.displayName
     $description = $Request.Body.Description
@@ -27,6 +27,7 @@ Function Invoke-AddPolicy {
         try {
             Write-Host 'Calling Adding policy'
             Set-CIPPIntunePolicy -TemplateType $Request.body.TemplateType -Description $description -DisplayName $displayname -RawJSON $RawJSON -AssignTo $AssignTo -tenantFilter $Tenant
+            "Added policy $($Displayname) to $($Tenant)"
             Write-LogMessage -user $Request.headers.'x-ms-client-principal' -API $APINAME -tenant $($Tenant) -message "Added policy $($Displayname)" -Sev 'Info'
         } catch {
             "Failed to add policy for $($Tenant): $($_.Exception.Message)"
